@@ -1,0 +1,99 @@
+const app = require('express')();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+var uniqid = require('uniqid');
+const GameService = require('../app/services/game.service.js');
+
+// ---------------------------------------------------
+// -------- CONSTANTS AND GLOBAL VARIABLES -----------
+// ---------------------------------------------------
+
+let games = [];
+let queue = [];
+
+// ---------------------------------
+// -------- GAME METHODS -----------
+// ---------------------------------
+
+const newPlayerInQueue = (socket) => {
+  if (queue.includes(socket)) {
+    socket.emit('queue.alreadyInQueue', GameService.send.forPlayer.viewQueueState());
+    return;
+  }
+  queue.push(socket);
+  // Queue management
+  if (queue.length >= 2) {
+    const player1Socket = queue.shift();
+    const player2Socket = queue.shift();
+    createGame(player1Socket, player2Socket);
+  }
+  else {
+    socket.emit('queue.added', GameService.send.forPlayer.viewQueueState());
+  }
+};
+
+const playerLeaveQueue = (socket) => {
+  queue.splice(queue.indexOf(socket), 1);
+  socket.emit('queue.left', GameService.send.forPlayer.viewQueueState());
+};
+
+const playerLeaveGame = (socket) => {
+  const gameIndex = GameService.utils.findGameIndexBySocketId(games, socket.id);
+  if (gameIndex !== -1) {
+    games[gameIndex].player1Socket.emit('game.left', GameService.send.forPlayer.viewQueueState());
+    games[gameIndex].player2Socket.emit('game.left', GameService.send.forPlayer.viewQueueState());
+    games.splice(gameIndex, 1);
+  }
+}
+
+const createGame = (player1Socket, player2Socket) => {
+
+  // remove players from queue
+  queue.splice(queue.indexOf(player1Socket), 1);
+  queue.splice(queue.indexOf(player2Socket), 1);
+
+  const newGame = GameService.init.gameState();
+  newGame['idGame'] = uniqid();
+  newGame['player1Socket'] = player1Socket;
+  newGame['player2Socket'] = player2Socket;
+
+  games.push(newGame);
+
+  const gameIndex = GameService.utils.findGameIndexById(games, newGame.idGame);
+
+  games[gameIndex].player1Socket.emit('game.start', GameService.send.forPlayer.viewGameState('player:1', games[gameIndex]));
+  games[gameIndex].player2Socket.emit('game.start', GameService.send.forPlayer.viewGameState('player:2', games[gameIndex]));
+};
+
+// ---------------------------------------
+// -------- SOCKETS MANAGEMENT -----------
+// ---------------------------------------
+
+io.on('connection', socket => {
+  console.log(`[${socket.id}] socket connected`);
+  socket.on('queue.join', () => {
+    console.log(`[${socket.id}] new player in queue `)
+    newPlayerInQueue(socket);
+  });
+  socket.on('disconnect', reason => {
+    console.log(`[${socket.id}] socket disconnected - ${reason}`);
+    if (GameService.utils.findGameIndexBySocketId(games, socket.id) !== -1) {
+      console.log(`[${socket.id}] socket disconnected from a game`)
+      playerLeaveGame(socket);
+    } else {
+      console.log(`[${socket.id}] socket disconnected from queue`)
+      playerLeaveQueue(socket);
+    }
+  });
+});
+
+
+// -----------------------------------
+// -------- SERVER METHODS -----------
+// -----------------------------------
+
+app.get('/', (req, res) => res.sendFile('index.html', { root: __dirname }));
+
+http.listen(3000, function () {
+  console.log('listening on *:3000');
+});
