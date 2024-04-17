@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SocketContext } from '../contexts/socket.context';
 import Toast from 'react-native-toast-message';
+import Board from "../components/board/board.component";
 
 export default function OnlineGameController({ navigation }) {
 
@@ -66,7 +67,7 @@ export default function OnlineGameController({ navigation }) {
 
             {inGame && (
                 <>
-                    <Text style={styles.paragraph}>
+                    {/* <Text style={styles.paragraph}>
                         Game found !
                     </Text>
                     <Text style={styles.paragraph}>
@@ -77,7 +78,8 @@ export default function OnlineGameController({ navigation }) {
                     </Text>
                     <Text style={styles.paragraph}>
                         Player - {idOpponent} -
-                    </Text>
+                    </Text> */}
+                    <Board />
                 </>
             )}
         </View>
