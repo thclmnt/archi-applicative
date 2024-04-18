@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useMemo } from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { SocketContext } from "../../../contexts/socket.context";
 import Dice from "./dice.component";
@@ -11,6 +11,10 @@ const PlayerDeck = () => {
     const [displayRollButton, setDisplayRollButton] = useState(false);
     const [rollsCounter, setRollsCounter] = useState(0);
     const [rollsMaximum, setRollsMaximum] = useState(3);
+
+    const [isDefi, setIsDefi] = useState(false);
+
+    const displayDefi = useMemo(() => rollsCounter === 2, [rollsCounter])
 
     useEffect(() => {
 
@@ -34,7 +38,7 @@ const PlayerDeck = () => {
 
     const rollDices = () => {
         if (rollsCounter <= rollsMaximum) {
-            socket.emit("game.dices.roll");
+            socket.emit("game.dices.roll", { isDefi });
         }
     };
 
@@ -71,11 +75,17 @@ const PlayerDeck = () => {
 
                     {displayRollButton && (
 
-                        <>
+                        <View style={styles.rollDefiContainer}>
                             <TouchableOpacity style={styles.rollButton} onPress={rollDices}>
                                 <Text style={styles.rollButtonText}>Roll</Text>
                             </TouchableOpacity>
-                        </>
+
+                            {displayDefi && (<TouchableOpacity style={isDefi ? styles.defiButtonEnable : styles.defiButtonDisable}
+                                onPress={() => setIsDefi(!isDefi)}
+                            >
+                                <Text style={styles.rollButtonText}>Défi ?</Text>
+                            </TouchableOpacity>)}
+                        </View>
 
                     )}
                 </>
@@ -108,12 +118,35 @@ const styles = StyleSheet.create({
     },
     rollButton: {
         width: "30%",
-        backgroundColor: "green",
         paddingVertical: 10,
         borderRadius: 5,
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "black"
+    },
+    defiButtonDisable: {
+        width: "20%",
+        paddingVertical: 10,
+        marginHorizontal: 10,
+        borderRadius: 5,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "grey"
+    },
+    defiButtonEnable: {
+        width: "20%",
+        paddingVertical: 10,
+        marginHorizontal: 10,
+        borderRadius: 5,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "lightgreen"
+    },
+    rollDefiContainer: {
+        flexDirection: "row",
+        marginBottom: 10,
+        width: "100%",
+        justifyContent: 'center'
     },
     rollButtonText: {
         fontSize: 18,
