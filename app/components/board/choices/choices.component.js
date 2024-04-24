@@ -1,9 +1,10 @@
-import { useContext, useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+// choices.component.js
+import React, { useState, useEffect, useContext } from "react";
+import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { SocketContext } from "../../../contexts/socket.context";
 
 const Choices = () => {
-
+    
     const socket = useContext(SocketContext);
 
     const [displayChoices, setDisplayChoices] = useState(false);
@@ -28,7 +29,7 @@ const Choices = () => {
             setIdSelectedChoice(choiceId);
             socket.emit("game.choices.selected", { choiceId });
         }
-
+        
     };
 
     return (
@@ -54,7 +55,7 @@ const Choices = () => {
 
 const styles = StyleSheet.create({
     choicesContainer: {
-        flex: 1,
+        flex: 3,
         flexDirection: "row",
         flexWrap: "wrap",
         justifyContent: "space-between",

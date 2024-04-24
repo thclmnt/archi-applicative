@@ -1,24 +1,25 @@
-import React, { useEffect, useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { SocketContext } from '../../../contexts/socket.context';
+import React, {useEffect, useContext, useState} from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { SocketContext } from "../../../contexts/socket.context";
 
 const Grid = () => {
+
     const socket = useContext(SocketContext);
 
-    const [displayGrid, setDisplayGrid] = useState(true);
+    const [displayGrid, setDisplayGrid] = useState(false);
     const [canSelectCells, setCanSelectCells] = useState([]);
     const [grid, setGrid] = useState([]);
 
     const handleSelectCell = (cellId, rowIndex, cellIndex) => {
         if (canSelectCells) {
-            socket.emit('game.grid.selected', { cellId, rowIndex, cellIndex });
+            socket.emit("game.grid.selected", { cellId, rowIndex, cellIndex });
         }
     };
 
     useEffect(() => {
-        socket.on('game.grid.view-state', (data) => {
+        socket.on("game.grid.view-state", (data) => {
             setDisplayGrid(data['displayGrid']);
-            setCanSelectCells(data['canSelectCells']);
+            setCanSelectCells(data['canSelectCells'])
             setGrid(data['grid']);
         });
     }, []);
@@ -33,28 +34,16 @@ const Grid = () => {
                                 key={cell.id}
                                 style={[
                                     styles.cell,
-                                    cell.owner === 'player:1' &&
-                                    styles.playerOwnedCell,
-                                    cell.owner === 'player:2' &&
-                                    styles.opponentOwnedCell,
-                                    cell.canBeChecked &&
-                                    !(cell.owner === 'player:1') &&
-                                    !(cell.owner === 'player:2') &&
-                                    styles.canBeCheckedCell,
+                                    cell.owner === "player:1" && styles.playerOwnedCell,
+                                    cell.owner === "player:2" && styles.opponentOwnedCell,
+                                    (cell.canBeChecked && !(cell.owner === "player:1") && !(cell.owner === "player:2")) && styles.canBeCheckedCell,
                                     rowIndex !== 0 && styles.topBorder,
                                     cellIndex !== 0 && styles.leftBorder,
                                 ]}
-                                onPress={() =>
-                                    handleSelectCell(
-                                        cell.id,
-                                        rowIndex,
-                                        cellIndex
-                                    )
-                                }
-                                disabled={!cell.canBeChecked}>
-                                <Text style={styles.cellText}>
-                                    {cell.viewContent}
-                                </Text>
+                                onPress={() => handleSelectCell(cell.id, rowIndex, cellIndex)}
+                                disabled={!cell.canBeChecked}
+                            >
+                                <Text style={styles.cellText}>{cell.viewContent}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -66,40 +55,40 @@ const Grid = () => {
 const styles = StyleSheet.create({
     gridContainer: {
         flex: 7,
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexDirection: 'column',
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
     },
     row: {
-        flexDirection: 'row',
+        flexDirection: "row",
         flex: 1,
-        width: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
+        width: "100%",
+        justifyContent: "center",
+        alignItems: "center",
     },
     cell: {
-        flexDirection: 'row',
+        flexDirection: "row",
         flex: 2,
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
+        width: "100%",
+        height: "100%",
+        justifyContent: "center",
+        alignItems: "center",
         borderWidth: 1,
-        borderColor: 'black',
+        borderColor: "black",
     },
     cellText: {
         fontSize: 11,
     },
     playerOwnedCell: {
-        backgroundColor: 'lightgreen',
+        backgroundColor: "lightgreen",
         opacity: 0.9,
     },
     opponentOwnedCell: {
-        backgroundColor: 'lightcoral',
+        backgroundColor: "lightcoral",
         opacity: 0.9,
     },
     canBeCheckedCell: {
-        backgroundColor: 'lightyellow',
+        backgroundColor: "lightyellow",
     },
     topBorder: {
         borderTopWidth: 1,
