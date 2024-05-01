@@ -30,6 +30,11 @@ const updateClientViewGrid = (game) => {
   game.player2Socket.emit('game.grid.view-state', GameService.send.forPlayer.gridViewState('player:2', game.gameState));
 }
 
+const updateClientScoreView = (game) => {
+  game.player1Socket.emit('game.score.view-state', GameService.send.forPlayer.scoreViewState(game.gameState));
+  game.player2Socket.emit('game.score.view-state', GameService.send.forPlayer.scoreViewState(game.gameState));
+}
+
 const newPlayerInQueue = (socket) => {
   if (queue.includes(socket)) {
     socket.emit('queue.alreadyInQueue', GameService.send.forPlayer.viewQueueState());
@@ -156,6 +161,11 @@ const createGame = (player1Socket, player2Socket) => {
     const isSec = games[gameIndex].gameState.deck.rollsCounter === 2;
     const combinations = GameService.choices.findCombinations(dices, isDefi, isSec);
 
+    if (combinations.length > 0 && rollsCounter >= rollsMaximum) {
+      // on rajoute du temps pour le choix
+      games[i].gameState.timer = 15;
+    }
+
     games[gameIndex].gameState.choices.availableChoices = combinations;
 
     updateClientViewDeck(games[i]);
@@ -199,6 +209,13 @@ const createGame = (player1Socket, player2Socket) => {
     // TODO: Ici calculer le score
     // TODO: Puis check si la partie s'arrête (lines / diagolales / no-more-gametokens)
 
+    // calcul du score
+    const { playerScores, winner } = GameService.score.calculateScoreAndWinner(games[i].gameState.grid);
+
+    games[i].gameState.player1Score = playerScores['player:1'];
+    games[i].gameState.player2Score = playerScores['player:2'];
+
+    updateClientScoreView(games[i]);
 
     // Sinon on finit le tour
     games[i].gameState.currentTurn = games[i].gameState.currentTurn === 'player:1' ? 'player:2' : 'player:1';
